@@ -19,7 +19,7 @@ dotenv.config();
 const { NODE_URL, INFURA_KEY, MNEMONIC, ETHERSCAN_API_KEY, PK, SOLIDITY_VERSION, SOLIDITY_SETTINGS } = process.env;
 
 const DEFAULT_MNEMONIC =
-  "candy maple cake sugar pudding cream honey rich smooth crumble sweet treat";
+  "";
 
 const sharedNetworkConfig: HttpNetworkUserConfig = {};
 if (PK) {
@@ -30,7 +30,7 @@ if (PK) {
   };
 }
 
-if (["mainnet", "rinkeby", "kovan", "goerli", "ropsten", "mumbai", "polygon"].includes(argv.network) && INFURA_KEY === undefined) {
+if (["mainnet", "rinkeby", "kovan", "goerli", "ropsten", "mumbai", "polygon", "moonbeam"].includes(argv.network) && INFURA_KEY === undefined) {
   throw new Error(
     `Could not find Infura key in env, unable to connect to network ${argv.network}`,
   );
@@ -102,6 +102,11 @@ const userConfig: HardhatUserConfig = {
     volta: {
       ...sharedNetworkConfig,
       url: `https://volta-rpc.energyweb.org`,
+    },
+    moonbeam: {
+      ...sharedNetworkConfig,
+      url: `https://rpc.testnet.moonbeam.network`,
+      
     },
   },
   namedAccounts: {
