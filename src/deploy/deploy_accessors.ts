@@ -7,6 +7,7 @@ const deploy: DeployFunction = async function (
   const { deployments, getNamedAccounts } = hre;
   const { deployer } = await getNamedAccounts();
   const { deploy } = deployments;
+  
 
   await deploy("SimulateTxAccessor", {
     from: deployer,
