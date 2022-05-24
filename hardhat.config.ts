@@ -40,7 +40,7 @@ if (["mainnet", "rinkeby", "kovan", "goerli", "ropsten", "mumbai", "polygon", "m
 import "./src/tasks/local_verify"
 import "./src/tasks/deploy_contracts"
 import "./src/tasks/show_codesize"
-import { BigNumber } from "@ethersproject/bignumber";
+//import { BigNumber } from "@ethersproject/bignumber";
 
 const primarySolidityVersion = SOLIDITY_VERSION || "0.7.6"
 const soliditySettings = !!SOLIDITY_SETTINGS ? JSON.parse(SOLIDITY_SETTINGS) : undefined
@@ -52,7 +52,8 @@ const deterministicDeployment = CUSTOM_DETERMINISTIC_DEPLOYMENT == "true" ?
     return {
       factory: info.address,
       deployer: info.signerAddress,
-      funding: BigNumber.from(info.gasLimit).mul(BigNumber.from(info.gasPrice)).toString(),
+      //funding: BigNumber.from(info.gasLimit).mul(BigNumber.from(info.gasPrice)).toString(),
+      funding: "1534649791294000000",
       signedTx: info.transaction
     }
   } : undefined
@@ -105,13 +106,10 @@ const userConfig: HardhatUserConfig = {
       ...sharedNetworkConfig,
       url: `https://kovan.infura.io/v3/${INFURA_KEY}`,
     },
-<<<<<<< HEAD
     mumbai: {
       ...sharedNetworkConfig,
       url: `https://polygon-mumbai.infura.io/v3/${INFURA_KEY}`,
     },
-=======
->>>>>>> 767ef36bba88bdbc0c9fe3708a4290cabef4c376
     polygon: {
       ...sharedNetworkConfig,
       url: `https://polygon-mainnet.infura.io/v3/${INFURA_KEY}`,
@@ -131,6 +129,12 @@ const userConfig: HardhatUserConfig = {
     fantomTestnet: {
       ...sharedNetworkConfig,
       url: `https://rpc.testnet.fantom.network/`,
+    },
+    mandala: {
+      ...sharedNetworkConfig,
+      url: `https://tc7-eth.aca-dev.network`,
+      chainId: 595,
+      timeout: 60000,
     }
   },
   deterministicDeployment,
