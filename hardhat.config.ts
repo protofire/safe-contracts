@@ -120,6 +120,14 @@ const userConfig: HardhatUserConfig = {
     fantomTestnet: {
       ...sharedNetworkConfig,
       url: `https://rpc.testnet.fantom.network/`,
+    },
+    cronosTestnet: {
+      ...sharedNetworkConfig,
+      url: `https://cronos-testnet-3.crypto.org:8545/`
+    },
+    cronos: {
+      ...sharedNetworkConfig,
+      url: `https://evm.cronos.org/`
     }
   },
   deterministicDeployment,
