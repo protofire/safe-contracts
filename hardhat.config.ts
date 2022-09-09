@@ -120,6 +120,10 @@ const userConfig: HardhatUserConfig = {
     fantomTestnet: {
       ...sharedNetworkConfig,
       url: `https://rpc.testnet.fantom.network/`,
+    },
+    flareCostonTestnet: {
+      ...sharedNetworkConfig,
+      url: `https://coston-api.flare.network/ext/bc/C/rpc`,
     }
   },
   deterministicDeployment,
