@@ -120,6 +120,10 @@ const userConfig: HardhatUserConfig = {
     fantomTestnet: {
       ...sharedNetworkConfig,
       url: `https://rpc.testnet.fantom.network/`,
+    },
+    bobaMainnet: {
+      ...sharedNetworkConfig,
+      url: `https://bobabeam.boba.network/`,
     }
   },
   deterministicDeployment,
