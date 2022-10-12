@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LGPL-3.0-only
+// SPDX-License-Identifier: LGPL-3.0
 pragma solidity >=0.7.0 <0.9.0;
 
 /// @title StorageAccessible - generic base contract that allows callers to access all internal storage.

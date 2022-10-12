@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LGPL-3.0-only
+// SPDX-License-Identifier: LGPL-3.0
 pragma solidity >=0.7.0 <0.9.0;
 
 /// @title Multi Send - Allows to batch multiple transactions into one.

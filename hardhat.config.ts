@@ -134,7 +134,17 @@ const userConfig: HardhatUserConfig = {
     timeout: 2000000,
   },
   etherscan: {
-    apiKey: ETHERSCAN_API_KEY,
+    apiKey:   ETHERSCAN_API_KEY,
+    customChains: [
+      {
+        network: "bobaMainnet",
+        chainId: 1294,
+        urls: {
+          apiURL: "https://api.bobascan.com",
+          browserURL: "https://bobascan.com"
+        }
+      }
+    ]
   },
 };
 if (NODE_URL) {
