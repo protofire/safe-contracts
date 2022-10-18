@@ -7,6 +7,10 @@ import dotenv from "dotenv";
 import yargs from "yargs";
 import { getSingletonFactoryInfo } from "@gnosis.pm/safe-singleton-factory";
 
+import * as sapphire from '@oasisprotocol/sapphire-paratime';
+import { extendEnvironment } from 'hardhat/config';
+
+
 const argv = yargs
   .option("network", {
     type: "string",
@@ -105,13 +109,10 @@ const userConfig: HardhatUserConfig = {
       ...sharedNetworkConfig,
       url: `https://kovan.infura.io/v3/${INFURA_KEY}`,
     },
-<<<<<<< HEAD
     mumbai: {
       ...sharedNetworkConfig,
       url: `https://polygon-mumbai.infura.io/v3/${INFURA_KEY}`,
     },
-=======
->>>>>>> 767ef36bba88bdbc0c9fe3708a4290cabef4c376
     polygon: {
       ...sharedNetworkConfig,
       url: `https://polygon-mainnet.infura.io/v3/${INFURA_KEY}`,
@@ -131,7 +132,11 @@ const userConfig: HardhatUserConfig = {
     fantomTestnet: {
       ...sharedNetworkConfig,
       url: `https://rpc.testnet.fantom.network/`,
-    }
+    },
+    sapphireTestnet: {
+      ...sharedNetworkConfig,
+      url: `https://testnet.sapphire.oasis.dev/`,
+    },
   },
   deterministicDeployment,
   namedAccounts: {
@@ -150,4 +155,11 @@ if (NODE_URL) {
     url: NODE_URL,
   }
 }
+
+extendEnvironment(async (hre) => {
+  const chainId = parseInt(await hre.network.provider.send('eth_chainId'), 16);
+  if (!sapphire.NETWORKS[chainId]) return;
+  hre.network.provider = sapphire.wrap(hre.network.provider);
+});
+
 export default userConfig

@@ -14,6 +14,7 @@ const deploy: DeployFunction = async function (
     args: [],
     log: true,
     deterministicDeployment: true,
+    gasLimit: 15000000
   });
 };
 

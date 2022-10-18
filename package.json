@@ -82,5 +82,8 @@
   },
   "peerDependencies": {
     "ethers": "^5.1.4"
+  },
+  "dependencies": {
+    "@oasisprotocol/sapphire-paratime": "^1.0.7"
   }
 }
