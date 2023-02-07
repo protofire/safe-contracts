@@ -105,13 +105,10 @@ const userConfig: HardhatUserConfig = {
       ...sharedNetworkConfig,
       url: `https://kovan.infura.io/v3/${INFURA_KEY}`,
     },
-<<<<<<< HEAD
     mumbai: {
       ...sharedNetworkConfig,
       url: `https://polygon-mumbai.infura.io/v3/${INFURA_KEY}`,
     },
-=======
->>>>>>> 767ef36bba88bdbc0c9fe3708a4290cabef4c376
     polygon: {
       ...sharedNetworkConfig,
       url: `https://polygon-mainnet.infura.io/v3/${INFURA_KEY}`,
@@ -131,7 +128,11 @@ const userConfig: HardhatUserConfig = {
     fantomTestnet: {
       ...sharedNetworkConfig,
       url: `https://rpc.testnet.fantom.network/`,
-    }
+    },
+    iotexTestnet: {
+      ...sharedNetworkConfig,
+      url: `https://babel-api.testnet.iotex.io`,
+    },
   },
   deterministicDeployment,
   namedAccounts: {

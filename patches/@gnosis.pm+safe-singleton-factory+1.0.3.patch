@@ -1,0 +1,13 @@
+diff --git a/node_modules/@gnosis.pm/safe-singleton-factory/artifacts/4690/deployment.json b/node_modules/@gnosis.pm/safe-singleton-factory/artifacts/4690/deployment.json
+new file mode 100644
+index 0000000..5825ac9
+--- /dev/null
++++ b/node_modules/@gnosis.pm/safe-singleton-factory/artifacts/4690/deployment.json
+@@ -0,0 +1,7 @@
++{
++  "gasPrice": 1000000000000,
++  "gasLimit": 1000725,
++  "signerAddress": "0x643c8A8120eFB675E82C5C58d8D473f5aDd0B5e6",
++  "transaction": "0xf8a71c85e8d4a51000830f45158080b853604580600e600039806000f350fe7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe03601600081602082378035828234f58015156039578182fd5b8082525050506014600cf38224c7a0daa9f4e9fa85a3ca9ef4d59151008f305494b89ed7759de9b842c215c93f2525a05077f6e35967df7bde735f779fbc791816fd07bebccf3a47fe4a2e4c6c558168",
++  "address": "0x1D5Bc0c945333E36eE5a3D699983294BD472281A"
++}
