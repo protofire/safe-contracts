@@ -1,6 +1,8 @@
 import type { HardhatUserConfig, HttpNetworkUserConfig } from "hardhat/types";
 import "@nomiclabs/hardhat-etherscan";
 import "@nomiclabs/hardhat-waffle";
+import "@matterlabs/hardhat-zksync-deploy";
+import "@matterlabs/hardhat-zksync-solc";
 import "solidity-coverage";
 import "hardhat-deploy";
 import dotenv from "dotenv";
@@ -71,6 +73,11 @@ const userConfig: HardhatUserConfig = {
       { version: "0.5.17" },
     ]
   },
+  zksolc: {
+    version: "1.3.5",
+    compilerSource: "binary",
+    settings: { },
+  },
   networks: {
     hardhat: {
       allowUnlimitedContractSize: true,
@@ -105,13 +112,10 @@ const userConfig: HardhatUserConfig = {
       ...sharedNetworkConfig,
       url: `https://kovan.infura.io/v3/${INFURA_KEY}`,
     },
-<<<<<<< HEAD
     mumbai: {
       ...sharedNetworkConfig,
       url: `https://polygon-mumbai.infura.io/v3/${INFURA_KEY}`,
     },
-=======
->>>>>>> 767ef36bba88bdbc0c9fe3708a4290cabef4c376
     polygon: {
       ...sharedNetworkConfig,
       url: `https://polygon-mainnet.infura.io/v3/${INFURA_KEY}`,
@@ -131,8 +135,14 @@ const userConfig: HardhatUserConfig = {
     fantomTestnet: {
       ...sharedNetworkConfig,
       url: `https://rpc.testnet.fantom.network/`,
-    }
+    },
+    zkSyncTestnet: {
+      url: "https://zksync2-testnet.zksync.dev",
+      ethNetwork: "goerli",
+      zksync: true,
+    },
   },
+  defaultNetwork: "zkSyncTestnet",
   deterministicDeployment,
   namedAccounts: {
     deployer: 0,
