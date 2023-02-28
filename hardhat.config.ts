@@ -140,8 +140,8 @@ const userConfig: HardhatUserConfig = {
         network: "bobaMainnet",
         chainId: 1294,
         urls: {
-          apiURL: "https://api.bobascan.com",
-          browserURL: "https://bobascan.com"
+          apiURL: "https://blockexplorer.bobabeam.boba.network/api",
+          browserURL: "https://blockexplorer.bobabeam.boba.network"
         }
       }
     ]
