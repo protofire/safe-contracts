@@ -69,7 +69,7 @@ type CompilerSettings = {
 const getCompilerSettings = (): CompilerSettings => {
     const COMMON_SETTINGS = {
         solidity: {
-            compilers: [{ version: primarySolidityVersion, settings: soliditySettings }, { version: "0.6.12" }, { version: "0.5.17" }, { version: "0.8.16" }],
+            compilers: [{ version: primarySolidityVersion, settings: soliditySettings }, { version: "0.6.12" }, { version: "0.5.17" }],
         },
     };
 
