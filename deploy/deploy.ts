@@ -3,7 +3,7 @@ import * as ethers from "ethers";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { Deployer } from "@matterlabs/hardhat-zksync-deploy";
 
-const factoryABI = '[{"inputs":[{"internalType":"bytes32","name":"salt","type":"bytes32"},{"internalType":"bytes32","name":"bytecodeHash","type":"bytes32"},{"internalType":"bytes","name":"input","type":"bytes"}],"name":"deployContract","outputs":[{"internalType":"address","name":"contractAddress","type":"address"}],"stateMutability":"nonpayable","type":"function"}]';
+const factoryABI = '[{"inputs":[{"internalType":"bytes32","name":"salt","type":"bytes32"},{"internalType":"bytes32","name":"bytecodeHash","type":"bytes32"},{"internalType":"bytes","name":"input","type":"bytes"}],"name":"deployContract","outputs":[{"internalType":"address","name":"contractAddress","type":"address"}],"stateMutability":"payable","type":"function"}]';
 
 export default async function deployContracts(hre: HardhatRuntimeEnvironment) {
   console.log(`Running deploy script`);
