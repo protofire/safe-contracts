@@ -846,9 +846,9 @@
   resolved "https://registry.yarnpkg.com/@gnosis.pm/mock-contract/-/mock-contract-4.0.0.tgz#eaf500fddcab81b5f6c22280a7b22ff891dd6f87"
   integrity sha512-SkRq2KwPx6vo0LAjSc8JhgQstrQFXRyn2yqquIfub7r2WHi5nUbF8beeSSXsd36hvBcQxQfmOIYNYRpj9JOhrQ==
 
-"@gnosis.pm/safe-singleton-factory@git+https://github.com/protofire/safe-singleton-factory.git#aa925bd4e54ea235b42a0bf68a8b5846833a7af4":
+"@gnosis.pm/safe-singleton-factory@git+https://github.com/protofire/safe-singleton-factory.git#zksync":
   version "1.0.14"
-  resolved "git+https://github.com/protofire/safe-singleton-factory.git#aa925bd4e54ea235b42a0bf68a8b5846833a7af4"
+  resolved "git+https://github.com/protofire/safe-singleton-factory.git#b6231a4e0864e369e03213c23c7a3772074d74b7"
 
 "@humanwhocodes/config-array@^0.11.8":
   version "0.11.8"

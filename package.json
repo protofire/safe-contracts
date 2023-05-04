@@ -49,7 +49,7 @@
     },
     "devDependencies": {
         "@gnosis.pm/mock-contract": "^4.0.0",
-        "@gnosis.pm/safe-singleton-factory": "git+https://github.com/protofire/safe-singleton-factory.git#aa925bd4e54ea235b42a0bf68a8b5846833a7af4",
+        "@gnosis.pm/safe-singleton-factory": "git+https://github.com/protofire/safe-singleton-factory.git#zksync",
         "@matterlabs/hardhat-zksync-deploy": "^0.6.3",
         "@matterlabs/hardhat-zksync-solc": "^0.3.16",
         "@matterlabs/zksync-contracts": "^0.6.1",
