@@ -37,6 +37,7 @@ if (["mainnet", "rinkeby", "kovan", "goerli", "ropsten", "mumbai", "polygon"].in
 }
 
 import "./src/tasks/local_verify";
+import "./src/tasks/test";
 import "./src/tasks/deploy_zksync";
 import "./src/tasks/deploy_contracts";
 import "./src/tasks/show_codesize";
