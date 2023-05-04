@@ -1,5 +1,4 @@
-import type { HardhatUserConfig, HttpNetworkUserConfig, SolidityUserConfig } from "hardhat/types";
-import { ZkSolcConfig } from "@matterlabs/hardhat-zksync-solc/dist/src/types";
+import type { HardhatUserConfig, HttpNetworkUserConfig } from "hardhat/types";
 import "@matterlabs/hardhat-zksync-deploy";
 import "@matterlabs/hardhat-zksync-solc";
 import "@nomiclabs/hardhat-etherscan";
@@ -20,7 +19,7 @@ const argv = yargs
 
 // Load environment variables.
 dotenv.config();
-const { NODE_URL, INFURA_KEY, MNEMONIC, ETHERSCAN_API_KEY, PK, SOLIDITY_VERSION, SOLIDITY_SETTINGS, CONTRACTS_TARGET = "evm", NODE_ENV, } = process.env;
+const { NODE_URL, INFURA_KEY, MNEMONIC, ETHERSCAN_API_KEY, PK, SOLIDITY_VERSION, SOLIDITY_SETTINGS } = process.env;
 
 const DEFAULT_MNEMONIC = "candy maple cake sugar pudding cream honey rich smooth crumble sweet treat";
 
@@ -61,49 +60,6 @@ const deterministicDeployment = (network: string) => {
     };
 };
 
-type CompilerSettings = {
-    solidity: SolidityUserConfig;
-    zksolc?: ZkSolcConfig;
-};
-
-const getCompilerSettings = (): CompilerSettings => {
-    const COMMON_SETTINGS = {
-        solidity: {
-            compilers: [{ version: primarySolidityVersion, settings: soliditySettings }, { version: "0.6.12" }, { version: "0.5.17" }],
-        },
-    };
-
-    if (CONTRACTS_TARGET === "zksync") {
-        return {
-            ...COMMON_SETTINGS,
-            zksolc: {
-                version: "1.3.8",
-                compilerSource: "binary",
-                settings: {
-                    isSystem: true,
-                },
-            },
-        };
-    }
-
-    return COMMON_SETTINGS;
-};
-
-const zkSyncTestnet =
-    NODE_ENV == "test"
-        ? {
-              ...sharedNetworkConfig,
-              url: "http://localhost:3050",
-              ethNetwork: "http://localhost:8545",
-              zksync: true,
-          }
-        : {
-              ...sharedNetworkConfig,
-              url: "https://testnet.era.zksync.dev",
-              ethNetwork: "goerli",
-              zksync: true,
-          };
-
 const userConfig: HardhatUserConfig = {
     paths: {
         artifacts: "build/artifacts",
@@ -111,69 +67,83 @@ const userConfig: HardhatUserConfig = {
         deploy: "src/deploy",
         sources: "contracts",
     },
+    solidity: {
+        compilers: [{ version: primarySolidityVersion, settings: soliditySettings }, { version: "0.6.12" }, { version: "0.5.17" }],
+    },
+    zksolc: {
+        version: "1.3.8",
+        compilerSource: "binary",
+        settings: {
+            isSystem: true,
+        },
+    },
     networks: {
         hardhat: {
             allowUnlimitedContractSize: true,
             blockGasLimit: 100000000,
             gas: 100000000,
-            zksync: false,
         },
         mainnet: {
             ...sharedNetworkConfig,
             url: `https://mainnet.infura.io/v3/${INFURA_KEY}`,
-            zksync: false,
         },
         xdai: {
             ...sharedNetworkConfig,
             url: "https://xdai.poanetwork.dev",
-            zksync: false,
         },
         ewc: {
             ...sharedNetworkConfig,
             url: `https://rpc.energyweb.org`,
-            zksync: false,
         },
         goerli: {
             ...sharedNetworkConfig,
             url: `https://goerli.infura.io/v3/${INFURA_KEY}`,
-            zksync: false,
         },
         mumbai: {
             ...sharedNetworkConfig,
             url: `https://polygon-mumbai.infura.io/v3/${INFURA_KEY}`,
-            zksync: false,
         },
         polygon: {
             ...sharedNetworkConfig,
             url: `https://polygon-mainnet.infura.io/v3/${INFURA_KEY}`,
-            zksync: false,
         },
         volta: {
             ...sharedNetworkConfig,
             url: `https://volta-rpc.energyweb.org`,
-            zksync: false,
         },
         bsc: {
             ...sharedNetworkConfig,
             url: `https://bsc-dataseed.binance.org/`,
-            zksync: false,
         },
         arbitrum: {
             ...sharedNetworkConfig,
             url: `https://arb1.arbitrum.io/rpc`,
-            zksync: false,
         },
         fantomTestnet: {
             ...sharedNetworkConfig,
             url: `https://rpc.testnet.fantom.network/`,
-            zksync: false,
         },
         avalanche: {
             ...sharedNetworkConfig,
             url: `https://api.avax.network/ext/bc/C/rpc`,
-            zksync: false,
         },
-        zkSyncTestnet,
+        zkSyncTestnet: {
+            ...sharedNetworkConfig,
+            url: "https://testnet.era.zksync.dev",
+            ethNetwork: "goerli",
+            zksync: true,
+        },
+        zkSyncLocal: {
+            /**
+             * @description One of the default available accounts on the local node
+             * @see https://github.com/matter-labs/local-setup/blob/main/rich-wallets.json
+             * @address 0x36615Cf349d7F6344891B1e7CA7C72883F5dc049
+             */
+            accounts: ["0x7726827caac94a7f9e1b160f7ea819f172f7b6f9d2a97f992c38edeab82d4110"],
+            url: "http://localhost:3050",
+            ethNetwork: "http://localhost:8545",
+            zksync: true,
+        },
     },
     deterministicDeployment,
     namedAccounts: {
@@ -185,7 +155,6 @@ const userConfig: HardhatUserConfig = {
     etherscan: {
         apiKey: ETHERSCAN_API_KEY,
     },
-    ...getCompilerSettings(),
 };
 if (NODE_URL) {
     userConfig.networks!!.custom = {

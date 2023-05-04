@@ -82,7 +82,7 @@ yarn test:zk
 
 To deploy safe-contracts to local zkSync node run
 ```bash
-NODE_ENV=test yarn deploy:zk
+yarn deploy:zk
 ```
 
 #### Custom Networks
