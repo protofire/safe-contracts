@@ -47,6 +47,9 @@
     "devDependencies": {
         "@gnosis.pm/mock-contract": "^4.0.0",
         "@gnosis.pm/safe-singleton-factory": "^1.0.14",
+        "@matterlabs/hardhat-zksync-deploy": "^0.6.3",
+        "@matterlabs/hardhat-zksync-solc": "^0.4.1",
+        "@matterlabs/hardhat-zksync-verify": "^0.1.8",
         "@nomiclabs/hardhat-ethers": "2.0.2",
         "@nomiclabs/hardhat-etherscan": "^3.1.7",
         "@nomiclabs/hardhat-waffle": "2.0.1",
@@ -78,7 +81,8 @@
         "solidity-coverage": "^0.7.17",
         "ts-node": "^9.1.1",
         "typescript": "^4.2.4",
-        "yargs": "^16.1.1"
+        "yargs": "^16.1.1",
+        "zksync-web3": "^0.14.3"
     },
     "peerDependencies": {
         "ethers": "5.4.0"
