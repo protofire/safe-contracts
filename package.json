@@ -15,6 +15,7 @@
     ],
     "scripts": {
         "build": "hardhat compile",
+        "build:zk": "hardhat compile --network zkSyncLocal",
         "build:ts": "yarn rimraf dist && tsc -p tsconfig.prod.json",
         "test": "hardhat test",
         "coverage": "hardhat coverage",
@@ -29,7 +30,7 @@
         "fmt:ts": "prettier 'src/**/*.ts' 'test/**/*.ts' -w",
         "prepack": "yarn build",
         "prepare": "husky install",
-        "prepublish": "yarn rimraf build && yarn build && yarn build:ts"
+        "prepublish": "yarn rimraf build && yarn build && yarn build:zk && yarn build:ts"
     },
     "repository": {
         "type": "git",
