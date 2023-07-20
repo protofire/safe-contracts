@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import hre, { deployments, waffle } from "hardhat";
+import hre from "hardhat";
 import { BigNumber } from "ethers";
 import "@nomiclabs/hardhat-ethers";
 import { AddressZero } from "@ethersproject/constants";
@@ -8,11 +8,12 @@ import {
     defaultTokenCallbackHandlerDeployment,
     deployContract,
     getSafeTemplate,
+    getWallets,
 } from "../utils/setup";
 import { executeContractCallWithSigners } from "../../src/utils/execution";
 
 describe("FallbackManager", async () => {
-    const setupWithTemplate = deployments.createFixture(async ({ deployments }) => {
+    const setupWithTemplate = hre.deployments.createFixture(async ({ deployments }) => {
         await deployments.fixture();
         const source = `
         contract Mirror {
@@ -31,7 +32,7 @@ describe("FallbackManager", async () => {
         };
     });
 
-    const [user1, user2] = waffle.provider.getWallets();
+    const [user1, user2] = getWallets();
 
     describe("setFallbackManager", async () => {
         it("is correctly set on deployment", async () => {
@@ -44,7 +45,9 @@ describe("FallbackManager", async () => {
             ).to.be.eq("0x" + "".padStart(64, "0"));
 
             // Setup Safe
-            await safe.setup([user1.address, user2.address], 1, AddressZero, "0x", handler.address, AddressZero, 0, AddressZero);
+            await (
+                await safe.setup([user1.address, user2.address], 1, AddressZero, "0x", handler.address, AddressZero, 0, AddressZero)
+            ).wait();
 
             // Check fallback handler
             await expect(
@@ -57,7 +60,7 @@ describe("FallbackManager", async () => {
             const handler = await defaultTokenCallbackHandlerDeployment();
 
             // Setup Safe
-            await safe.setup([user1.address, user2.address], 1, AddressZero, "0x", AddressZero, AddressZero, 0, AddressZero);
+            await (await safe.setup([user1.address, user2.address], 1, AddressZero, "0x", AddressZero, AddressZero, 0, AddressZero)).wait();
 
             // Check fallback handler
             await expect(
@@ -79,7 +82,7 @@ describe("FallbackManager", async () => {
             const handler = await defaultTokenCallbackHandlerDeployment();
 
             // Setup Safe
-            await safe.setup([user1.address, user2.address], 1, AddressZero, "0x", AddressZero, AddressZero, 0, AddressZero);
+            await (await safe.setup([user1.address, user2.address], 1, AddressZero, "0x", AddressZero, AddressZero, 0, AddressZero)).wait();
 
             // Check event
             await expect(executeContractCallWithSigners(safe, safe, "setFallbackHandler", [handler.address], [user1]))
@@ -98,7 +101,9 @@ describe("FallbackManager", async () => {
             await expect(safeHandler.callStatic.onERC1155Received(AddressZero, AddressZero, 0, 0, "0x")).to.be.reverted;
 
             // Setup Safe
-            await safe.setup([user1.address, user2.address], 1, AddressZero, "0x", handler.address, AddressZero, 0, AddressZero);
+            await (
+                await safe.setup([user1.address, user2.address], 1, AddressZero, "0x", handler.address, AddressZero, 0, AddressZero)
+            ).wait();
 
             // Check callbacks
             await expect(await safeHandler.callStatic.onERC1155Received(AddressZero, AddressZero, 0, 0, "0x")).to.be.eq("0xf23a6e61");
@@ -107,7 +112,9 @@ describe("FallbackManager", async () => {
         it("sends along msg.sender on simple call", async () => {
             const { safe, mirror } = await setupWithTemplate();
             // Setup Safe
-            await safe.setup([user1.address, user2.address], 1, AddressZero, "0x", mirror.address, AddressZero, 0, AddressZero);
+            await (
+                await safe.setup([user1.address, user2.address], 1, AddressZero, "0x", mirror.address, AddressZero, 0, AddressZero)
+            ).wait();
 
             const tx = {
                 to: safe.address,
@@ -128,7 +135,9 @@ describe("FallbackManager", async () => {
         it("sends along msg.sender on more complex call", async () => {
             const { safe, mirror } = await setupWithTemplate();
             // Setup Safe
-            await safe.setup([user1.address, user2.address], 1, AddressZero, "0x", mirror.address, AddressZero, 0, AddressZero);
+            await (
+                await safe.setup([user1.address, user2.address], 1, AddressZero, "0x", mirror.address, AddressZero, 0, AddressZero)
+            ).wait();
 
             const tx = {
                 to: safe.address,
@@ -155,7 +164,7 @@ describe("FallbackManager", async () => {
         it("cannot be set to self", async () => {
             const { safe } = await setupWithTemplate();
             // Setup Safe
-            await safe.setup([user1.address], 1, AddressZero, "0x", AddressZero, AddressZero, 0, AddressZero);
+            await (await safe.setup([user1.address], 1, AddressZero, "0x", AddressZero, AddressZero, 0, AddressZero)).wait();
 
             // The transaction execution function doesn't bubble up revert messages so we check for a generic transaction fail code GS013
             await expect(executeContractCallWithSigners(safe, safe, "setFallbackHandler", [safe.address], [user1])).to.be.revertedWith(
