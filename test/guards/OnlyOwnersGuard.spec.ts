@@ -1,19 +1,19 @@
 import { expect } from "chai";
-import hre, { deployments, waffle } from "hardhat";
+import hre from "hardhat";
 import "@nomiclabs/hardhat-ethers";
-import { getMock, getSafeWithOwners } from "../utils/setup";
+import { getContractFactoryByName, getMock, getSafeWithOwners, getWallets } from "../utils/setup";
 import { buildSafeTransaction, executeContractCallWithSigners, executeTxWithSigners } from "../../src/utils/execution";
 
 describe("OnlyOwnersGuard", async () => {
-    const [user1, user2] = waffle.provider.getWallets();
+    const [user1, user2] = getWallets();
 
-    const setupTests = deployments.createFixture(async ({ deployments }) => {
+    const setupTests = hre.deployments.createFixture(async ({ deployments }) => {
         await deployments.fixture();
         const safe = await getSafeWithOwners([user1.address]);
-        const guardFactory = await hre.ethers.getContractFactory("OnlyOwnersGuard");
+        const guardFactory = await getContractFactoryByName("OnlyOwnersGuard");
         const guard = await guardFactory.deploy();
         const mock = await getMock();
-        await executeContractCallWithSigners(safe, safe, "setGuard", [guard.address], [user1]);
+        await (await executeContractCallWithSigners(safe, safe, "setGuard", [guard.address], [user1])).wait();
 
         return {
             safe,

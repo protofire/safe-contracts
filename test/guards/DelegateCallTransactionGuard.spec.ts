@@ -1,20 +1,20 @@
 import { expect } from "chai";
-import hre, { deployments, waffle, ethers } from "hardhat";
+import hre from "hardhat";
 import "@nomiclabs/hardhat-ethers";
 import { AddressZero } from "@ethersproject/constants";
-import { getSafeWithOwners } from "../utils/setup";
+import { getContractFactoryByName, getSafeWithOwners, getWallets } from "../utils/setup";
 import { buildContractCall, executeContractCallWithSigners } from "../../src/utils/execution";
 import { AddressOne } from "../../src/utils/constants";
 
 describe("DelegateCallTransactionGuard", async () => {
-    const [user1] = waffle.provider.getWallets();
+    const [user1] = getWallets();
 
-    const setupTests = deployments.createFixture(async ({ deployments }) => {
+    const setupTests = hre.deployments.createFixture(async ({ deployments }) => {
         await deployments.fixture();
         const safe = await getSafeWithOwners([user1.address]);
-        const guardFactory = await hre.ethers.getContractFactory("DelegateCallTransactionGuard");
+        const guardFactory = await getContractFactoryByName("DelegateCallTransactionGuard");
         const guard = await guardFactory.deploy(AddressZero);
-        await executeContractCallWithSigners(safe, safe, "setGuard", [guard.address], [user1]);
+        await (await executeContractCallWithSigners(safe, safe, "setGuard", [guard.address], [user1])).wait();
         return {
             safe,
             guardFactory,
@@ -93,7 +93,7 @@ describe("DelegateCallTransactionGuard", async () => {
         it("can set allowed target via Safe", async () => {
             const { safe, guardFactory } = await setupTests();
             const guard = await guardFactory.deploy(AddressOne);
-            await executeContractCallWithSigners(safe, safe, "setGuard", [guard.address], [user1]);
+            await (await executeContractCallWithSigners(safe, safe, "setGuard", [guard.address], [user1])).wait();
 
             expect(await guard.allowedTarget()).to.be.eq(AddressOne);
             const allowedTarget = safe.attach(AddressOne);
