@@ -1,7 +1,7 @@
 import { expect } from "chai";
-import hre, { deployments, waffle, ethers } from "hardhat";
+import hre, { ethers } from "hardhat";
 import "@nomiclabs/hardhat-ethers";
-import { deployContract, getFactory, getMock, getSafeWithOwners, getSafeProxyRuntimeCode } from "../utils/setup";
+import { deployContract, getFactory, getMock, getSafeWithOwners, getSafeProxyRuntimeCode, getWallets } from "../utils/setup";
 import { AddressZero } from "@ethersproject/constants";
 import { BigNumber } from "ethers";
 import { calculateChainSpecificProxyAddress, calculateProxyAddress, calculateProxyAddressWithCallback } from "../../src/utils/proxies";
@@ -32,9 +32,9 @@ describe("ProxyFactory", async () => {
         }
     }`;
 
-    const [user1] = waffle.provider.getWallets();
+    const [user1] = getWallets();
 
-    const setupTests = deployments.createFixture(async ({ deployments }) => {
+    const setupTests = hre.deployments.createFixture(async ({ deployments }) => {
         await deployments.fixture();
         const singleton = await deployContract(user1, SINGLETON_SOURCE);
         return {
@@ -59,7 +59,7 @@ describe("ProxyFactory", async () => {
         it("should revert with invalid initializer", async () => {
             const { factory, singleton } = await setupTests();
             await expect(factory.createProxyWithNonce(singleton.address, "0x42baddad", saltNonce)).to.be.revertedWith(
-                "Transaction reverted without a reason",
+                hre.network.zksync ? "execution reverted" : "Transaction reverted without a reason",
             );
         });
 
@@ -116,7 +116,7 @@ describe("ProxyFactory", async () => {
         it("should revert with invalid initializer", async () => {
             const { factory, singleton } = await setupTests();
             await expect(factory.createProxyWithNonce(singleton.address, "0x42baddad", saltNonce)).to.be.revertedWith(
-                "Transaction reverted without a reason",
+                hre.network.zksync ? "execution reverted" : "Transaction reverted without a reason",
             );
         });
 
@@ -157,7 +157,7 @@ describe("ProxyFactory", async () => {
             const proxyAddress = await calculateChainSpecificProxyAddress(factory, singleton.address, initCode, saltNonce, await chainId());
             expect(await provider.getCode(proxyAddress)).to.eq("0x");
 
-            await factory.createChainSpecificProxyWithNonce(singleton.address, initCode, saltNonce);
+            await (await factory.createChainSpecificProxyWithNonce(singleton.address, initCode, saltNonce)).wait();
 
             expect(await provider.getCode(proxyAddress)).to.be.eq(await getSafeProxyRuntimeCode());
         });
@@ -200,13 +200,13 @@ describe("ProxyFactory", async () => {
         it("check callback error cancels deployment", async () => {
             const { factory, mock, singleton } = await setupTests();
             const initCode = "0x";
-            await mock.givenAnyRevert();
+            await (await mock.givenAnyRevert()).wait();
             await expect(
                 factory.createProxyWithCallback(singleton.address, initCode, saltNonce, mock.address),
                 "Should fail if callback fails",
             ).to.be.reverted;
 
-            await mock.reset();
+            await (await mock.reset()).wait();
             // Should be successfull now
             const proxyAddress = await calculateProxyAddressWithCallback(factory, singleton.address, initCode, saltNonce, mock.address);
             await expect(factory.createProxyWithCallback(singleton.address, initCode, saltNonce, mock.address))
