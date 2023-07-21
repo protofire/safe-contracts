@@ -1,8 +1,18 @@
 import { ethers, Contract, BigNumberish } from "ethers";
+import hre from "hardhat";
+import * as zk from "zksync-web3";
 
 export const calculateProxyAddress = async (factory: Contract, singleton: string, inititalizer: string, nonce: number | string) => {
-    const deploymentCode = ethers.utils.solidityPack(["bytes", "uint256"], [await factory.proxyCreationCode(), singleton]);
     const salt = ethers.utils.solidityKeccak256(["bytes32", "uint256"], [ethers.utils.solidityKeccak256(["bytes"], [inititalizer]), nonce]);
+
+    if (hre.network.zksync) {
+        const proxyCreationCode = (await hre.artifacts.readArtifact("SafeProxy")).deployedBytecode;
+        const bytecodehash = zk.utils.hashBytecode(proxyCreationCode);
+        const input = new ethers.utils.AbiCoder().encode(["address"], [singleton]);
+        return zk.utils.create2Address(factory.address, bytecodehash, salt, input);
+    }
+
+    const deploymentCode = ethers.utils.solidityPack(["bytes", "uint256"], [await factory.proxyCreationCode(), singleton]);
     return ethers.utils.getCreate2Address(factory.address, salt, ethers.utils.keccak256(deploymentCode));
 };
 
@@ -24,10 +34,18 @@ export const calculateChainSpecificProxyAddress = async (
     nonce: number | string,
     chainId: BigNumberish,
 ) => {
-    const deploymentCode = ethers.utils.solidityPack(["bytes", "uint256"], [await factory.proxyCreationCode(), singleton]);
     const salt = ethers.utils.solidityKeccak256(
         ["bytes32", "uint256", "uint256"],
         [ethers.utils.solidityKeccak256(["bytes"], [inititalizer]), nonce, chainId],
     );
+
+    if (hre.network.zksync) {
+        const proxyCreationCode = (await hre.artifacts.readArtifact("SafeProxy")).deployedBytecode;
+        const bytecodehash = zk.utils.hashBytecode(proxyCreationCode);
+        const input = new ethers.utils.AbiCoder().encode(["address"], [singleton]);
+        return zk.utils.create2Address(factory.address, bytecodehash, salt, input);
+    }
+
+    const deploymentCode = ethers.utils.solidityPack(["bytes", "uint256"], [await factory.proxyCreationCode(), singleton]);
     return ethers.utils.getCreate2Address(factory.address, salt, ethers.utils.keccak256(deploymentCode));
 };
