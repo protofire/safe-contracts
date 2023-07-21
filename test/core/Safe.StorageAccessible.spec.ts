@@ -1,16 +1,16 @@
 import { expect } from "chai";
-import { deployments, waffle } from "hardhat";
+import hre from "hardhat";
 import "@nomiclabs/hardhat-ethers";
-import { getSafeSingleton, getSafeWithOwners } from "../utils/setup";
+import { getSafeSingleton, getSafeWithOwners, getWallets } from "../utils/setup";
 import { utils } from "ethers";
 import { killLibContract } from "../utils/contracts";
 
 describe("StorageAccessible", async () => {
-    const [user1, user2] = waffle.provider.getWallets();
+    const [user1, user2] = getWallets();
 
-    const setupTests = deployments.createFixture(async ({ deployments }) => {
+    const setupTests = hre.deployments.createFixture(async ({ deployments }) => {
         await deployments.fixture();
-        const killLib = await killLibContract(user1);
+        const killLib = await killLibContract(user1, hre.network.zksync);
         return {
             safe: await getSafeWithOwners([user1.address, user2.address], 1),
             killLib,
@@ -35,7 +35,14 @@ describe("StorageAccessible", async () => {
     });
 
     describe("simulateAndRevert", async () => {
-        it("should revert changes", async () => {
+        it("should revert changes", async function () {
+            /**
+             * ## Test not applicable for zkSync, therefore should skip.
+             * The `SELFDESTRUCT` instruction is not supported
+             * @see https://era.zksync.io/docs/reference/architecture/differences-with-ethereum.html#selfdestruct
+             */
+            if (hre.network.zksync) this.skip();
+
             const { safe, killLib } = await setupTests();
             await expect(safe.callStatic.simulateAndRevert(killLib.address, killLib.interface.encodeFunctionData("killme"))).to.be.reverted;
         });
