@@ -26,7 +26,7 @@ export const compatFallbackHandlerContract = async () => {
 
 export const getSafeSingleton = async () => {
     const SafeDeployment = await deployments.get(safeContractUnderTest());
-    const Safe = await getContractFactoryByName(safeContractUnderTest());
+    const Safe = await hre.ethers.getContractFactory(safeContractUnderTest());
     return Safe.attach(SafeDeployment.address);
 };
 
@@ -44,7 +44,7 @@ export const getFactoryContract = async () => {
 
 export const getFactory = async () => {
     const FactoryDeployment = await deployments.get("SafeProxyFactory");
-    const Factory = await getContractFactoryByName("SafeProxyFactory");
+    const Factory = await hre.ethers.getContractFactory("SafeProxyFactory");
     return Factory.attach(FactoryDeployment.address);
 };
 
@@ -95,7 +95,7 @@ export const getSafeTemplate = async (saltNumber: string = getRandomIntAsString(
     const factory = await getFactory();
     const template = await factory.callStatic.createProxyWithNonce(singleton.address, "0x", saltNumber);
     await factory.createProxyWithNonce(singleton.address, "0x", saltNumber).then((tx: any) => tx.wait());
-    const Safe = await getContractFactoryByName(safeContractUnderTest());
+    const Safe = await hre.ethers.getContractFactory(safeContractUnderTest());
     return Safe.attach(template);
 };
 
