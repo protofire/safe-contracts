@@ -1,7 +1,7 @@
 import { expect } from "chai";
-import hre, { deployments, ethers, waffle } from "hardhat";
+import hre, { ethers } from "hardhat";
 import "@nomiclabs/hardhat-ethers";
-import { getMock, getSafeWithOwners } from "../utils/setup";
+import { getMock, getSafeWithOwners, getWallets } from "../utils/setup";
 import {
     safeApproveHash,
     buildSafeTransaction,
@@ -19,9 +19,9 @@ describe("SafeL2", async () => {
         }
     });
 
-    const [user1, user2] = waffle.provider.getWallets();
+    const [user1, user2] = getWallets();
 
-    const setupTests = deployments.createFixture(async ({ deployments }) => {
+    const setupTests = hre.deployments.createFixture(async ({ deployments }) => {
         await deployments.fixture();
         const mock = await getMock();
         return {
@@ -30,6 +30,13 @@ describe("SafeL2", async () => {
         };
     });
 
+    /**
+     * ## Skip for zkSync, due to Expected to fail with official SafeL2.sol due to the use of the unsupported send() function in the handlePayment()
+     * ## Expected to pass when send() will be replaced with call()
+     * ## Or after a protocol upgrade (see link2)
+     * @see https://era.zksync.io/docs/dev/building-on-zksync/contracts/differences-with-ethereum.html#using-call-over-send-or-transfer
+     * @see https://twitter.com/zksync/status/1644459406828924934
+     */
     describe("execTransactions", async () => {
         it("should emit SafeMultiSigTransaction event", async () => {
             const { safe } = await setupTests();
@@ -37,12 +44,13 @@ describe("SafeL2", async () => {
                 to: user1.address,
                 nonce: await safe.nonce(),
                 operation: 0,
-                gasPrice: 1,
+                // Making gasPrice=0 fpr zkSync to skip send() function usage
+                gasPrice: hre.network.zksync ? 0 : 1,
                 safeTxGas: 100000,
                 refundReceiver: user2.address,
             });
 
-            await user1.sendTransaction({ to: safe.address, value: parseEther("1") });
+            await (await user1.sendTransaction({ to: safe.address, value: parseEther("1") })).wait();
             await expect(await hre.ethers.provider.getBalance(safe.address)).to.be.deep.eq(parseEther("1"));
 
             const additionalInfo = ethers.utils.defaultAbiCoder.encode(["uint256", "address", "uint256"], [tx.nonce, user1.address, 1]);
@@ -75,9 +83,12 @@ describe("SafeL2", async () => {
         it("should emit SafeModuleTransaction event", async () => {
             const { safe, mock } = await setupTests();
             const user2Safe = safe.connect(user2);
-            await executeContractCallWithSigners(safe, safe, "enableModule", [user2.address], [user1]);
+            await (await executeContractCallWithSigners(safe, safe, "enableModule", [user2.address], [user1])).wait();
 
-            await expect(user2Safe.execTransactionFromModule(mock.address, 0, "0xbaddad", 0))
+            //Use manual gasLimit because gas estimation fails for this function on zkSync, though transaction executed successfully
+            await expect(
+                user2Safe.execTransactionFromModule(mock.address, 0, "0xbaddad", 0, { gasLimit: hre.network.zksync ? 250_000 : undefined }),
+            )
                 .to.emit(safe, "SafeModuleTransaction")
                 .withArgs(user2.address, mock.address, 0, "0xbaddad", 0)
                 .to.emit(safe, "ExecutionFromModuleSuccess")
