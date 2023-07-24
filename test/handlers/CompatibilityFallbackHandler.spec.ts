@@ -1,9 +1,15 @@
 import { buildContractSignature } from "./../../src/utils/execution";
 import { expect } from "chai";
-import hre, { deployments, waffle, ethers } from "hardhat";
+import hre from "hardhat";
 import "@nomiclabs/hardhat-ethers";
 import { AddressZero } from "@ethersproject/constants";
-import { compatFallbackHandlerContract, getCompatFallbackHandler, getSafeWithOwners } from "../utils/setup";
+import {
+    compatFallbackHandlerContract,
+    getCompatFallbackHandler,
+    getContractFactoryByName,
+    getSafeWithOwners,
+    getWallets,
+} from "../utils/setup";
 import {
     buildSignatureBytes,
     executeContractCallWithSigners,
@@ -17,16 +23,16 @@ import { BigNumber } from "ethers";
 import { killLibContract } from "../utils/contracts";
 
 describe("CompatibilityFallbackHandler", async () => {
-    const [user1, user2] = waffle.provider.getWallets();
+    const [user1, user2] = getWallets();
 
-    const setupTests = deployments.createFixture(async ({ deployments }) => {
+    const setupTests = hre.deployments.createFixture(async ({ deployments }) => {
         await deployments.fixture();
-        const signLib = await (await hre.ethers.getContractFactory("SignMessageLib")).deploy();
+        const signLib = await (await getContractFactoryByName("SignMessageLib")).deploy();
         const handler = await getCompatFallbackHandler();
         const signerSafe = await getSafeWithOwners([user1.address], 1, handler.address);
         const safe = await getSafeWithOwners([user1.address, user2.address, signerSafe.address], 2, handler.address);
         const validator = (await compatFallbackHandlerContract()).attach(safe.address);
-        const killLib = await killLibContract(user1);
+        const killLib = await killLibContract(user1, hre.network.zksync);
         return {
             safe,
             validator,
@@ -67,7 +73,7 @@ describe("CompatibilityFallbackHandler", async () => {
         it("should revert if called directly", async () => {
             const { handler } = await setupTests();
             await expect(handler.callStatic["isValidSignature(bytes,bytes)"]("0xbaddad", "0x")).to.be.revertedWith(
-                "function call to a non-contract account",
+                hre.network.zksync ? "call revert exception" : "function call to a non-contract account",
             );
         });
 
@@ -83,7 +89,7 @@ describe("CompatibilityFallbackHandler", async () => {
 
         it("should return magic value if message was signed", async () => {
             const { safe, validator, signLib } = await setupTests();
-            await executeContractCallWithSigners(safe, signLib, "signMessage", ["0xbaddad"], [user1, user2], true);
+            await (await executeContractCallWithSigners(safe, signLib, "signMessage", ["0xbaddad"], [user1, user2], true)).wait();
             expect(await validator.callStatic["isValidSignature(bytes,bytes)"]("0xbaddad", "0x")).to.be.eq("0x20c13b0b");
         });
 
@@ -112,34 +118,34 @@ describe("CompatibilityFallbackHandler", async () => {
     describe("isValidSignature(bytes32,bytes)", async () => {
         it("should revert if called directly", async () => {
             const { handler } = await setupTests();
-            const dataHash = ethers.utils.keccak256("0xbaddad");
+            const dataHash = hre.ethers.utils.keccak256("0xbaddad");
             await expect(handler.callStatic["isValidSignature(bytes32,bytes)"](dataHash, "0x")).to.be.revertedWith(
-                "function call to a non-contract account",
+                hre.network.zksync ? "call revert exception" : "function call to a non-contract account",
             );
         });
 
         it("should revert if message was not signed", async () => {
             const { validator } = await setupTests();
-            const dataHash = ethers.utils.keccak256("0xbaddad");
+            const dataHash = hre.ethers.utils.keccak256("0xbaddad");
             await expect(validator.callStatic["isValidSignature(bytes32,bytes)"](dataHash, "0x")).to.be.revertedWith("Hash not approved");
         });
 
         it("should revert if signature is not valid", async () => {
             const { validator } = await setupTests();
-            const dataHash = ethers.utils.keccak256("0xbaddad");
+            const dataHash = hre.ethers.utils.keccak256("0xbaddad");
             await expect(validator.callStatic["isValidSignature(bytes32,bytes)"](dataHash, "0xdeaddeaddeaddead")).to.be.reverted;
         });
 
         it("should return magic value if message was signed", async () => {
             const { safe, validator, signLib } = await setupTests();
-            const dataHash = ethers.utils.keccak256("0xbaddad");
-            await executeContractCallWithSigners(safe, signLib, "signMessage", [dataHash], [user1, user2], true);
+            const dataHash = hre.ethers.utils.keccak256("0xbaddad");
+            await (await executeContractCallWithSigners(safe, signLib, "signMessage", [dataHash], [user1, user2], true)).wait();
             expect(await validator.callStatic["isValidSignature(bytes32,bytes)"](dataHash, "0x")).to.be.eq("0x1626ba7e");
         });
 
         it("should return magic value if enough owners signed and allow a mix different signature types", async () => {
             const { validator, signerSafe } = await setupTests();
-            const dataHash = ethers.utils.keccak256("0xbaddad");
+            const dataHash = hre.ethers.utils.keccak256("0xbaddad");
             const typedDataSig = {
                 signer: user1.address,
                 data: await user1._signTypedData(
@@ -201,11 +207,18 @@ describe("CompatibilityFallbackHandler", async () => {
         // eslint-disable-next-line @typescript-eslint/no-empty-function
         it.skip("can be called for any Safe", async () => {});
 
-        it("should revert changes", async () => {
+        it("should revert changes", async function () {
+            /**
+             * ## Test not applicable for zkSync, therefore should skip.
+             * The `SELFDESTRUCT` instruction is not supported
+             * @see https://era.zksync.io/docs/reference/architecture/differences-with-ethereum.html#selfdestruct
+             */
+            if (hre.network.zksync) this.skip();
+
             const { validator, killLib } = await setupTests();
-            const code = await ethers.provider.getCode(validator.address);
+            const code = await hre.ethers.provider.getCode(validator.address);
             expect(await validator.callStatic.simulate(killLib.address, killLib.interface.encodeFunctionData("killme"))).to.be.eq("0x");
-            expect(await ethers.provider.getCode(validator.address)).to.be.eq(code);
+            expect(await hre.ethers.provider.getCode(validator.address)).to.be.eq(code);
         });
 
         it("should return result", async () => {

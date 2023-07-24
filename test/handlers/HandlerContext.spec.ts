@@ -1,15 +1,15 @@
 import { expect } from "chai";
-import hre, { deployments, waffle } from "hardhat";
+import hre from "hardhat";
 import "@nomiclabs/hardhat-ethers";
 import { AddressZero } from "@ethersproject/constants";
-import { getSafeTemplate } from "../utils/setup";
+import { getContractFactoryByName, getSafeTemplate, getWallets } from "../utils/setup";
 
 describe("HandlerContext", async () => {
-    const [user1, user2] = waffle.provider.getWallets();
+    const [user1, user2] = getWallets();
 
-    const setup = deployments.createFixture(async ({ deployments }) => {
+    const setup = hre.deployments.createFixture(async ({ deployments }) => {
         await deployments.fixture();
-        const TestHandler = await hre.ethers.getContractFactory("TestHandler");
+        const TestHandler = await getContractFactoryByName("TestHandler");
         const handler = await TestHandler.deploy();
         return {
             safe: await getSafeTemplate(),
@@ -28,7 +28,7 @@ describe("HandlerContext", async () => {
 
     it("works with the Safe", async () => {
         const { safe, handler } = await setup();
-        await safe.setup([user1.address, user2.address], 1, AddressZero, "0x", handler.address, AddressZero, 0, AddressZero);
+        await (await safe.setup([user1.address, user2.address], 1, AddressZero, "0x", handler.address, AddressZero, 0, AddressZero)).wait();
 
         const response = await user1.call({
             to: safe.address,

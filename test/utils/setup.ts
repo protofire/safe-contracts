@@ -9,71 +9,71 @@ import { getZkContractFactoryByName, zkCompile } from "./zk";
 import { getRandomIntAsString } from "./numbers";
 
 export const defaultTokenCallbackHandlerDeployment = async () => {
-    return await deployments.get("TokenCallbackHandler");
+    return deployments.get("TokenCallbackHandler");
 };
 
 export const defaultTokenCallbackHandlerContract = async () => {
-    return await hre.ethers.getContractFactory("TokenCallbackHandler");
+    return getContractFactoryByName("TokenCallbackHandler");
 };
 
 export const compatFallbackHandlerDeployment = async () => {
-    return await deployments.get("CompatibilityFallbackHandler");
+    return deployments.get("CompatibilityFallbackHandler");
 };
 
 export const compatFallbackHandlerContract = async () => {
-    return await hre.ethers.getContractFactory("CompatibilityFallbackHandler");
+    return getContractFactoryByName("CompatibilityFallbackHandler");
 };
 
 export const getSafeSingleton = async () => {
     const SafeDeployment = await deployments.get(safeContractUnderTest());
-    const Safe = await hre.ethers.getContractFactory(safeContractUnderTest());
+    const Safe = await getContractFactoryByName(safeContractUnderTest());
     return Safe.attach(SafeDeployment.address);
 };
 
 export const getSafeSingletonContract = async () => {
-    const safeSingleton = await hre.ethers.getContractFactory(safeContractUnderTest());
+    const safeSingleton = await getContractFactoryByName(safeContractUnderTest());
 
     return safeSingleton;
 };
 
 export const getFactoryContract = async () => {
-    const factory = await hre.ethers.getContractFactory("SafeProxyFactory");
+    const factory = await getContractFactoryByName("SafeProxyFactory");
 
     return factory;
 };
 
 export const getFactory = async () => {
     const FactoryDeployment = await deployments.get("SafeProxyFactory");
-    const Factory = await hre.ethers.getContractFactory("SafeProxyFactory");
+    const Factory = await getContractFactoryByName("SafeProxyFactory");
     return Factory.attach(FactoryDeployment.address);
 };
 
 export const getSimulateTxAccessor = async () => {
     const SimulateTxAccessorDeployment = await deployments.get("SimulateTxAccessor");
-    const SimulateTxAccessor = await hre.ethers.getContractFactory("SimulateTxAccessor");
+    const SimulateTxAccessor = await getContractFactoryByName("SimulateTxAccessor");
     return SimulateTxAccessor.attach(SimulateTxAccessorDeployment.address);
 };
 
 export const getMultiSend = async () => {
     const MultiSendDeployment = await deployments.get("MultiSend");
-    const MultiSend = await hre.ethers.getContractFactory("MultiSend");
+    const MultiSend = await getContractFactoryByName("MultiSend");
     return MultiSend.attach(MultiSendDeployment.address);
 };
 
 export const getMultiSendCallOnly = async () => {
     const MultiSendDeployment = await deployments.get("MultiSendCallOnly");
-    const MultiSend = await hre.ethers.getContractFactory("MultiSendCallOnly");
+    const MultiSend = await getContractFactoryByName("MultiSendCallOnly");
     return MultiSend.attach(MultiSendDeployment.address);
 };
 
 export const getCreateCall = async () => {
     const CreateCallDeployment = await deployments.get("CreateCall");
-    const CreateCall = await hre.ethers.getContractFactory("CreateCall");
+    const CreateCall = await getContractFactoryByName("CreateCall");
     return CreateCall.attach(CreateCallDeployment.address);
 };
 
 export const migrationContract = async () => {
-    return await hre.ethers.getContractFactory("Migration");
+    return await getContractFactoryByName("Migration");
 };
 
 export const getMock = async () => {
@@ -95,7 +95,7 @@ export const getSafeTemplate = async (saltNumber: string = getRandomIntAsString(
     const factory = await getFactory();
     const template = await factory.callStatic.createProxyWithNonce(singleton.address, "0x", saltNumber);
     await factory.createProxyWithNonce(singleton.address, "0x", saltNumber).then((tx: any) => tx.wait());
-    const Safe = await hre.ethers.getContractFactory(safeContractUnderTest());
+    const Safe = await getContractFactoryByName(safeContractUnderTest());
     return Safe.attach(template);
 };
 
