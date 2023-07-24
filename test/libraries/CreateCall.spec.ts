@@ -1,7 +1,7 @@
 import { expect } from "chai";
-import hre, { deployments, waffle, ethers } from "hardhat";
+import hre, { ethers } from "hardhat";
 import "@nomiclabs/hardhat-ethers";
-import { compile, getCreateCall, getSafeWithOwners } from "../utils/setup";
+import { compile, getCreateCall, getSafeWithOwners, getWallets } from "../utils/setup";
 import { buildContractCall, executeTx, safeApproveHash } from "../../src/utils/execution";
 import { parseEther } from "@ethersproject/units";
 
@@ -18,9 +18,17 @@ contract Test {
 }`;
 
 describe("CreateCall", async () => {
-    const [user1] = waffle.provider.getWallets();
+    before(function () {
+        /**
+         * ## performCreate and performCreate2 functions of CreateCall.sol will not work on zkSync
+         * @see https://era.zksync.io/docs/reference/architecture/differences-with-ethereum.html#create-create2
+         */
+        if (hre.network.zksync) this.skip();
+    });
 
-    const setupTests = deployments.createFixture(async ({ deployments }) => {
+    const [user1] = getWallets();
+
+    const setupTests = hre.deployments.createFixture(async ({ deployments }) => {
         await deployments.fixture();
         const testContract = await compile(CONTRACT_SOURCE);
         return {

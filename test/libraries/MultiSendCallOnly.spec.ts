@@ -1,15 +1,15 @@
 import { expect } from "chai";
-import hre, { deployments, waffle } from "hardhat";
+import hre from "hardhat";
 import "@nomiclabs/hardhat-ethers";
-import { deployContract, getMock, getMultiSendCallOnly, getSafeWithOwners } from "../utils/setup";
+import { deployContract, getMock, getMultiSendCallOnly, getSafeWithOwners, getWallets } from "../utils/setup";
 import { buildContractCall, buildSafeTransaction, executeTx, MetaTransaction, safeApproveHash } from "../../src/utils/execution";
 import { buildMultiSendSafeTx } from "../../src/utils/multisend";
 import { parseEther } from "@ethersproject/units";
 
 describe("MultiSendCallOnly", async () => {
-    const [user1, user2] = waffle.provider.getWallets();
+    const [user1, user2] = getWallets();
 
-    const setupTests = deployments.createFixture(async ({ deployments }) => {
+    const setupTests = hre.deployments.createFixture(async ({ deployments }) => {
         await deployments.fixture();
         const setterSource = `
             contract StorageSetter {
@@ -57,7 +57,7 @@ describe("MultiSendCallOnly", async () => {
 
         it("Can execute single ether transfer", async () => {
             const { safe, multiSend } = await setupTests();
-            await user1.sendTransaction({ to: safe.address, value: parseEther("1") });
+            await (await user1.sendTransaction({ to: safe.address, value: parseEther("1") })).wait();
             const userBalance = await hre.ethers.provider.getBalance(user2.address);
             await expect(await hre.ethers.provider.getBalance(safe.address)).to.be.deep.eq(parseEther("1"));
 
@@ -71,7 +71,7 @@ describe("MultiSendCallOnly", async () => {
 
         it("reverts all tx if any fails", async () => {
             const { safe, multiSend } = await setupTests();
-            await user1.sendTransaction({ to: safe.address, value: parseEther("1") });
+            await (await user1.sendTransaction({ to: safe.address, value: parseEther("1") })).wait();
             const userBalance = await hre.ethers.provider.getBalance(user2.address);
             await expect(await hre.ethers.provider.getBalance(safe.address)).to.be.deep.eq(parseEther("1"));
 
@@ -122,7 +122,7 @@ describe("MultiSendCallOnly", async () => {
 
         it("can execute combinations", async () => {
             const { safe, multiSend, storageSetter } = await setupTests();
-            await user1.sendTransaction({ to: safe.address, value: parseEther("1") });
+            await (await user1.sendTransaction({ to: safe.address, value: parseEther("1") })).wait();
             const userBalance = await hre.ethers.provider.getBalance(user2.address);
             await expect(await hre.ethers.provider.getBalance(safe.address)).to.be.deep.eq(parseEther("1"));
 
