@@ -18,3 +18,5 @@ typechain-types
 .certora_internal
 .certora_recent_jobs.json
 .zip-output-url.txt
+contracts/libraries/SafeToL2Migration.sol
+wallets.txt

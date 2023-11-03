@@ -78,28 +78,33 @@ contract SafeToL2Migration is SafeStorage {
     }
 
     /**
-     * @dev Internal function with common migration steps, changes the singleton and emits SafeMultiSigTransaction event
+     * @dev Internal function with common migration steps, changes the singleton and emits SafeMultiSigTransaction events
      */
     function migrate(address l2Singleton, bytes memory functionData) private {
         singleton = l2Singleton;
 
-        // Encode nonce, sender, threshold
-        bytes memory additionalInfo = abi.encode(0, msg.sender, threshold);
+        // Create loop to emit SafeMultiSigTransaction for each nonce between 0 and nonce-1
+        // For backend service to catch up with Safe we simulate transaction execution for each nonce
+        for(uint i = 0; i < nonce; i++) {
 
-        // Simulate a L2 transaction so Safe Tx Service indexer picks up the Safe
-        emit SafeMultiSigTransaction(
-            MIGRATION_SINGLETON,
-            0,
-            functionData,
-            Enum.Operation.DelegateCall,
-            0,
-            0,
-            0,
-            address(0),
-            address(0),
-            "", // We cannot detect signatures
-            additionalInfo
-        );
+            // Encode nonce (i in this case), sender, threshold
+            bytes memory additionalInfo = abi.encode(i, msg.sender, threshold);
+
+            // Simulate a L2 transaction so Safe Tx Service indexer picks up the Safe
+            emit SafeMultiSigTransaction(
+                MIGRATION_SINGLETON,
+                0,
+                functionData,
+                Enum.Operation.DelegateCall,
+                0,
+                0,
+                0,
+                address(0),
+                address(0),
+                "", // We cannot detect signatures
+                additionalInfo
+            );
+        }
         emit ChangedMasterCopy(singleton);
     }
 
@@ -109,7 +114,7 @@ contract SafeToL2Migration is SafeStorage {
      * @dev This function should only be called via a delegatecall to perform the upgrade.
      * Singletons versions will be compared, so it implies that contracts exist
      */
-    function migrateToL2(address l2Singleton) public onlyDelegateCall onlyNonceZero {
+    function migrateToL2(address l2Singleton) public onlyDelegateCall /* onlyNonceZero */ {
         require(address(singleton) != l2Singleton, "Safe is already using the singleton");
         bytes32 oldSingletonVersion = keccak256(abi.encodePacked(ISafe(singleton).VERSION()));
         bytes32 newSingletonVersion = keccak256(abi.encodePacked(ISafe(l2Singleton).VERSION()));
