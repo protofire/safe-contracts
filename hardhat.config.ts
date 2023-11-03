@@ -16,7 +16,7 @@ const argv = yargs
 
 // Load environment variables.
 dotenv.config();
-const { NODE_URL, INFURA_KEY, MNEMONIC, ETHERSCAN_API_KEY, PK, SOLIDITY_VERSION, SOLIDITY_SETTINGS } = process.env;
+const { NODE_URL, INFURA_KEY, MNEMONIC, ETHERSCAN_API_KEY, PK, SOLIDITY_VERSION, SOLIDITY_SETTINGS, CUSTOM_DETERMINISTIC_DEPLOYMENT } = process.env;
 
 const DEFAULT_MNEMONIC = "candy maple cake sugar pudding cream honey rich smooth crumble sweet treat";
 
@@ -42,21 +42,22 @@ import { DeterministicDeploymentInfo } from "hardhat-deploy/dist/types";
 const primarySolidityVersion = SOLIDITY_VERSION || "0.7.6";
 const soliditySettings = SOLIDITY_SETTINGS ? JSON.parse(SOLIDITY_SETTINGS) : undefined;
 
-const deterministicDeployment = (network: string): DeterministicDeploymentInfo => {
-    const info = getSingletonFactoryInfo(parseInt(network));
-    if (!info) {
-        throw new Error(`
-        Safe factory not found for network ${network}. You can request a new deployment at https://github.com/safe-global/safe-singleton-factory.
-        For more information, see https://github.com/safe-global/safe-contracts#replay-protection-eip-155
-      `);
-    }
-    return {
-        factory: info.address,
-        deployer: info.signerAddress,
-        funding: BigNumber.from(info.gasLimit).mul(BigNumber.from(info.gasPrice)).toString(),
-        signedTx: info.transaction,
-    };
-};
+const deterministicDeployment = CUSTOM_DETERMINISTIC_DEPLOYMENT == "true" ? 
+    (network: string): DeterministicDeploymentInfo => {
+        const info = getSingletonFactoryInfo(parseInt(network));
+        if (!info) {
+            throw new Error(`
+            Safe factory not found for network ${network}. You can request a new deployment at https://github.com/safe-global/safe-singleton-factory.
+            For more information, see https://github.com/safe-global/safe-contracts#replay-protection-eip-155
+        `);
+        }
+        return {
+            factory: info.address,
+            deployer: info.signerAddress,
+            funding: BigNumber.from(info.gasLimit).mul(BigNumber.from(info.gasPrice)).toString(),
+            signedTx: info.transaction,
+        };
+    } : undefined;
 
 const userConfig: HardhatUserConfig = {
     paths: {
@@ -114,6 +115,14 @@ const userConfig: HardhatUserConfig = {
             ...sharedNetworkConfig,
             url: `https://api.avax.network/ext/bc/C/rpc`,
         },
+        scrollSepolia: {
+            ...sharedNetworkConfig,
+            url: `http://archive-node.sepolia.scroll.xyz:8545/`,
+        },
+        scroll: {
+            ...sharedNetworkConfig,
+            url: `https://scroll-mainnet.chainstacklabs.com`,
+        },
     },
     deterministicDeployment,
     namedAccounts: {
@@ -123,7 +132,28 @@ const userConfig: HardhatUserConfig = {
         timeout: 2000000,
     },
     etherscan: {
-        apiKey: ETHERSCAN_API_KEY,
+        apiKey: {
+            "scrollSepolia": ETHERSCAN_API_KEY || "",
+            "scroll": ETHERSCAN_API_KEY || "",
+        },
+        customChains: [
+            {
+                network: "scrollSepolia",
+                chainId: 534351,
+                urls: {
+                  apiURL: "https://api-sepolia.scrollscan.dev/api",
+                  browserURL: "https://sepolia.scrollscan.com",
+                }
+              },
+              {
+                network: "scroll",
+                chainId: 534352,
+                urls: {
+                  apiURL: "https://api.scrollscan.com/api",
+                  browserURL: "https://scrollscan.com",
+                }
+              },
+        ]
     },
 };
 if (NODE_URL) {

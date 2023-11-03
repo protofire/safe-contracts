@@ -24,6 +24,7 @@
         "deploy-custom": "rm -rf deployments/custom && npm run deploy-all custom",
         "deploy-all": "hardhat deploy-contracts --network",
         "deploy": "hardhat deploy --network",
+        "deploy-migration": "hardhat deploy --tags migration --network",
         "lint": "npm run lint:sol && npm run lint:ts",
         "lint:sol": "solhint 'contracts/**/*.sol'",
         "lint:sol:prettier": "prettier 'contracts/**/*.sol' --list-different",
