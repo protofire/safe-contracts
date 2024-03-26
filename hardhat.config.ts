@@ -145,6 +145,20 @@ const userConfig: HardhatUserConfig = {
             zksync: true,
             saveDeployments: true,
         },
+        zkLinkTestnet: {
+          ...sharedNetworkConfig,
+          url: "https://goerli.rpc.zklink.io",
+          ethNetwork: "goerli",
+          zksync: true,
+          verifyURL: 'https://goerli.explorer.zklink.io/'
+        },
+        zkLink: {
+          ...sharedNetworkConfig,
+          url: "https://rpc.zklink.io",
+          ethNetwork: "mainnet",
+          zksync: true,
+          verifyURL: 'https://explorer.zklink.io/'
+        },
     },
     deterministicDeployment,
     namedAccounts: {
