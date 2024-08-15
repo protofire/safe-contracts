@@ -31,7 +31,8 @@
     "fmt:ts": "prettier 'src/**/*.ts' 'test/**/*.ts' -w",
     "prepack": "yarn build",
     "prepare": "husky install",
-    "prepublish": "yarn rimraf build && yarn build && yarn build:zk && yarn build:ts"
+    "prepublish": "yarn rimraf build && yarn build && yarn build:zk && yarn build:ts",
+    "postinstall": "patch-package"
   },
   "repository": {
     "type": "git",
@@ -94,5 +95,9 @@
   },
   "resolutions": {
     "hardhat-deploy/@ethersproject/contracts": "5.5.0"
+  },
+  "dependencies": {
+    "patch-package": "^8.0.0",
+    "postinstall-postinstall": "^2.1.0"
   }
 }

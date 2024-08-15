@@ -133,7 +133,7 @@ const userConfig: HardhatUserConfig = {
         zkSyncTestnet: {
             ...sharedNetworkConfig,
             url: "https://testnet.era.zksync.dev",
-            ethNetwork: "goerli",
+            //ethNetwork: "goerli",
             zksync: true,
             verifyURL: 'https://zksync2-testnet-explorer.zksync.dev/contract_verification'
         },
@@ -141,23 +141,51 @@ const userConfig: HardhatUserConfig = {
             chainId: 270,
             accounts: LOCAL_NODE_RICH_WALLETS.map((account) => account.privateKey),
             url: "http://localhost:3050",
-            ethNetwork: "http://localhost:8545",
+            //ethNetwork: "http://localhost:8545",
             zksync: true,
             saveDeployments: true,
         },
         zkLinkTestnet: {
           ...sharedNetworkConfig,
           url: "https://goerli.rpc.zklink.io",
-          ethNetwork: "goerli",
+          //ethNetwork: "goerli",
           zksync: true,
-          verifyURL: 'https://goerli.explorer.zklink.io/'
+          verifyURL: 'https://goerli.explorer.zklink.io/contract_verification'
         },
         zkLink: {
           ...sharedNetworkConfig,
           url: "https://rpc.zklink.io",
-          ethNetwork: "mainnet",
+          //ethNetwork: "mainnet",
           zksync: true,
-          verifyURL: 'https://explorer.zklink.io/'
+          verifyURL: 'https://explorer.zklink.io/contract_verification'
+        },
+        cronosZk: {
+          ...sharedNetworkConfig,
+          url: "https://rpc-zkevm-t0.cronos.org",
+          //ethNetwork: "goerli",
+          zksync: true,
+          verifyURL: 'https://zkevm-t0.cronos.org/explorer/contract_verification'
+        },
+        cronoszktest: {
+          ...sharedNetworkConfig,
+          url: "https://testnet.zkevm.cronos.org",
+          //ethNetwork: "goerli", // or a Sepolia RPC endpoint from Infura/Alchemy/Chainstack etc.
+          zksync: true,
+          verifyURL: "https://explorer.zkevm.cronos.org/contract_verification",
+        },
+        playFiTestnet: {
+          ...sharedNetworkConfig,
+          url: "https://albireo-rpc.playfi.ai/",
+          //ethNetwork: "goerli",
+          zksync: true,
+          verifyURL: 'https://albireo-explorer.playfi.ai/explorer/contract_verification'
+        },
+        sophonTest: {
+          ...sharedNetworkConfig,
+          url: "https://rpc.testnet.sophon.xyz",
+          //ethNetwork: "goerli", // or a Sepolia RPC endpoint from Infura/Alchemy/Chainstack etc.
+          zksync: true,
+          verifyURL: "https://explorer.zkevm.cronos.org/contract_verification",
         },
     },
     deterministicDeployment,
