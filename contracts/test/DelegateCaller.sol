@@ -13,12 +13,14 @@ contract DelegateCaller {
     function makeDelegatecall(address _called, bytes memory _calldata) external returns (bool success, bytes memory returnData) {
         (success, returnData) = _called.delegatecall(_calldata);
         if (!success) {
-            // solhint-disable-next-line no-inline-assembly
+            /* solhint-disable no-inline-assembly */
+            /// @solidity memory-safe-assembly
             assembly {
-                let length := returndatasize()
-                returndatacopy(0, 0, length)
-                revert(0, length)
+                let ptr := mload(0x40)
+                returndatacopy(ptr, 0, returndatasize())
+                revert(ptr, returndatasize())
             }
+            /* solhint-enable no-inline-assembly */
         }
     }
 }

@@ -1,43 +1,43 @@
 ## Safe Protocol
 
-The Safe Protocol is a non-custodial set of smart contracts that allows users to create programmable multi-signature accounts that require multiple parties to authorize transactions. This provides an added layer of security and reduces the risk of funds being lost or stolen compared to regular EOA account.
+The Safe Protocol is a non-custodial set of smart contracts that allows users to create programmable multi-signature accounts that require multiple parties to authorize transactions. This provides an added layer of security and reduces the risk of funds being lost or stolen compared to regular EOA accounts.
 
 ### Basic flows:
 
 **Deploying a Safe account**
 
--   A user creates a Safe account by deploying a Proxy contract pointing to the Safe implementation contract. The implementation itself is Proxy-agnostic.
--   The user configures the Safe wallet by setting the number of required signatures and the list of owners.
+- A user creates a Safe account by deploying a Proxy contract pointing to the Safe implementation contract. The implementation itself is Proxy-agnostic.
+- The user configures the Safe wallet by setting the number of required signatures and the list of owners.
 
 **Executing a transaction**
 
--   To sign a transaction, the user generates a Safe transaction hash using the EIP-712 typed structured data hashing scheme.
--   The required amount of parties sign it either with a private key, on-chain approval or a smart contract wallet
--   The user submits the transaction to the Safe account on-chain.
+- To sign a transaction, the user generates a Safe transaction hash using the EIP-712 typed structured data hashing scheme.
+- The required amount of parties sign it either with a private key, on-chain approval or a smart contract wallet
+- The user submits the transaction to the Safe account on-chain.
 
 **Updating the owner structure or policies**
 
--   The implementation contract has self-authorised (can be called by the Safe account itself) methods to update the owner structure or policies of the Safe account.
+- The implementation contract has self-authorised (can be called by the Safe account itself) methods to update the owner structure or policies of the Safe account.
 
 **Signing a message**
 The message can be signed two ways on-chain and off-chain.
 
--   On-chain signing:
-    -   The user generates a Safe message hash using the EIP-712 typed structured data hashing scheme.
-    -   The user submits a delegatecall transaction to `SignMessageLib` contract to mark the hash as signed.
-    -   The hash now can be verified through the EIP-1271 interface.
--   Off-chain signing:
-    -   The user generates a Safe message hash using the EIP-712 typed structured data hashing scheme.
-    -   The user signs the message hash with a private key or a smart contract wallet.
-    -   The signature now can be verified through the EIP-1271 interface.
+- On-chain signing:
+    - The user generates a Safe message hash using the EIP-712 typed structured data hashing scheme.
+    - The user submits a delegatecall transaction to `SignMessageLib` contract to mark the hash as signed.
+    - The hash now can be verified through the EIP-1271 interface.
+- Off-chain signing:
+    - The user generates a Safe message hash using the EIP-712 typed structured data hashing scheme.
+    - The user signs the message hash with a private key or a smart contract wallet.
+    - The signature now can be verified through the EIP-1271 interface.
 
 ### Advanced features
 
 #### Modules
 
-Modules add additional functionalities to the Safe contracts. They are smart contracts that implement the Safe’s functionality while separating module logic from the Safe’s core contract.
+Modules add additional functionalities to the Safe Smart Account contracts. They are smart contracts that implement the Safe’s functionality while separating module logic from the Safe’s core contract.
 
-A basic Safe does not require any modules. Adding and removing a module requires confirmation from all owners. Events are emitted whenever a module is added or removed and also whenever a module transaction was successful or failed.
+A basic Safe does not require any modules. Adding and removing a module requires confirmation from all owners. Events are emitted whenever a module is added or removed and also whenever a module transaction is successful or failed.
 
 > ⚠️ WARNING: Modules are a security risk since they can execute arbitrary transactions,
 > so only trusted and audited modules should be added to a Safe. A malicious module can completely takeover a Safe
@@ -82,16 +82,16 @@ SafeTx {
 }
 ```
 
--   to: address of the account to which the transaction is being sent
--   value: value in wei to be sent with the transaction
--   data: data to be sent with the transaction
--   operation: type of operation (0: CALL, 1: DELEGATECALL)
--   safeTxGas: gas that should be used for the Safe transaction
--   baseGas: gas costs for data that needs to be paid for by the Safe regardless of the used gas amount
--   gasPrice: gas price that should be used for the payment calculation
--   gasToken: token address (or 0 if ETH) that is used for the payment
--   refundReceiver: address of receiver of gas payment (or 0 if tx.origin)
--   nonce: unique number to make sure this transaction can only be executed once
+- to: address of the account to which the transaction is being sent
+- value: value in wei to be sent with the transaction
+- data: data to be sent with the transaction
+- operation: type of operation (0: CALL, 1: DELEGATECALL)
+- safeTxGas: gas that should be used for the Safe transaction
+- baseGas: gas costs for data that needs to be paid for by the Safe regardless of the used gas amount
+- gasPrice: gas price that should be used for the payment calculation
+- gasToken: token address (or 0 if ETH) that is used for the payment
+- refundReceiver: address of receiver of gas payment (or 0 if tx.origin)
+- nonce: unique number to make sure this transaction can only be executed once
 
 #### Safe Transaction Hash
 
@@ -140,4 +140,4 @@ If the refund parameter is set to true, the Safe will refund the gas costs to th
 
 #### Fallback contract
 
-A Fallback contract contains logic outside of the scope of the core Safe contracts, such as the token callback logic and/or logic that didn't fit into the core contracts because of bytecode size limitations.
+A Fallback contract contains logic outside of the scope of the core Safe Smart Account, such as the token callback logic and/or logic that didn't fit into the core contracts because of bytecode size limitations.

@@ -3,12 +3,15 @@
 pragma solidity >=0.7.0 <0.9.0;
 
 /**
- * @title Create Call - Allows to use the different create opcodes to deploy a contract.
+ * @title Create Call
+ * @notice Allows Safes to use `CREATE*` opcodes and deploy contracts.
  * @author Richard Meissner - @rmeissner
- * @notice This contract provides functions for deploying a new contract using the create and create2 opcodes.
  */
 contract CreateCall {
-    /// @notice Emitted when a new contract is created
+    /**
+     * @notice Emitted when a new contract is created.
+     * @param newContract The address of the created contract.
+     */
     event ContractCreation(address indexed newContract);
 
     /**
@@ -22,7 +25,7 @@ contract CreateCall {
         /* solhint-disable no-inline-assembly */
         /// @solidity memory-safe-assembly
         assembly {
-            newContract := create2(value, add(0x20, deploymentData), mload(deploymentData), salt)
+            newContract := create2(value, add(deploymentData, 0x20), mload(deploymentData), salt)
         }
         /* solhint-enable no-inline-assembly */
         require(newContract != address(0), "Could not deploy contract");

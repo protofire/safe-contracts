@@ -2,12 +2,10 @@ import { DeployFunction } from "hardhat-deploy/types";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 
 const deploy: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-    const { deployments, getNamedAccounts } = hre;
-    const { deployer } = await getNamedAccounts();
-    const { deploy } = deployments;
+    const { deployer: deployerAccount } = await hre.getNamedAccounts();
 
-    await deploy("SafeProxyFactory", {
-        from: deployer,
+    await hre.deployments.deploy("SafeProxyFactory", {
+        from: deployerAccount,
         args: [],
         log: true,
         deterministicDeployment: true,

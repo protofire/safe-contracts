@@ -1,15 +1,15 @@
 import { expect } from "chai";
-import { deployments, ethers } from "hardhat";
-import { getSafeSingleton, getSafeWithOwners } from "../utils/setup";
+import hre, { ethers } from "hardhat";
+import { getSafeSingleton, getSafe } from "../utils/setup";
 import { killLibContract } from "../utils/contracts";
 
 describe("StorageAccessible", () => {
-    const setupTests = deployments.createFixture(async ({ deployments }) => {
+    const setupTests = hre.deployments.createFixture(async ({ deployments }) => {
         await deployments.fixture();
-        const [user1, user2] = await ethers.getSigners();
+        const [user1, user2] = await hre.ethers.getSigners();
         const killLib = await killLibContract(user1);
         return {
-            safe: await getSafeWithOwners([user1.address, user2.address], 1),
+            safe: await getSafe({ owners: [user1.address, user2.address], threshold: 1 }),
             killLib,
         };
     });

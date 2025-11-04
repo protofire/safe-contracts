@@ -1,17 +1,17 @@
 import { expect } from "chai";
-import hre, { deployments, ethers } from "hardhat";
-import { getSafeWithOwners } from "../utils/setup";
+import hre from "hardhat";
+import { getSafe, getSignMessageLib } from "../utils/setup";
 import { executeContractCallWithSigners, calculateSafeMessageHash } from "../../src/utils/execution";
 import { chainId } from "../utils/encoding";
 
 describe("SignMessageLib", () => {
-    const setupTests = deployments.createFixture(async ({ deployments }) => {
+    const setupTests = hre.deployments.createFixture(async ({ deployments }) => {
         await deployments.fixture();
-        const lib = await (await hre.ethers.getContractFactory("SignMessageLib")).deploy();
-        const signers = await ethers.getSigners();
+        const lib = await getSignMessageLib();
+        const signers = await hre.ethers.getSigners();
         const [user1, user2] = signers;
         return {
-            safe: await getSafeWithOwners([user1.address, user2.address]),
+            safe: await getSafe({ owners: [user1.address, user2.address] }),
             lib,
             signers,
         };

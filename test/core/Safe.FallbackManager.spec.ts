@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import hre, { deployments, ethers } from "hardhat";
 import { AddressZero } from "@ethersproject/constants";
-import { defaultTokenCallbackHandlerDeployment, deployContract, getSafeTemplate, getTokenCallbackHandler } from "../utils/setup";
+import { defaultTokenCallbackHandlerDeployment, deployContractFromSource, getSafeTemplate, getTokenCallbackHandler } from "../utils/setup";
 import { executeContractCallWithSigners } from "../../src/utils/execution";
 
 describe("FallbackManager", () => {
@@ -19,7 +19,7 @@ describe("FallbackManager", () => {
         }`;
         const signers = await ethers.getSigners();
         const [user1] = signers;
-        const mirror = await deployContract(user1, source);
+        const mirror = await deployContractFromSource(user1, source);
         return {
             safe: await getSafeTemplate(),
             mirror,
@@ -107,13 +107,13 @@ describe("FallbackManager", () => {
 
             // Check unset callbacks
             // Ethers v6 throws an internal error when trying to call a non-existent function
-            await expect(safeHandler.onERC1155Received.staticCall(AddressZero, AddressZero, 0, 0, "0x")).to.be.rejected;
+            await expect(safeHandler.supportsInterface.staticCall("0x01ffc9a7")).to.be.rejected;
 
             // Setup Safe
             await safe.setup([user1.address, user2.address], 1, AddressZero, "0x", handler.address, AddressZero, 0, AddressZero);
 
             // Check callbacks
-            expect(await safeHandler.onERC1155Received.staticCall(AddressZero, AddressZero, 0, 0, "0x")).to.be.eq("0xf23a6e61");
+            expect(await safeHandler.supportsInterface.staticCall("0x01ffc9a7")).to.be.true;
         });
 
         it("sends along msg.sender on simple call", async () => {
@@ -174,10 +174,9 @@ describe("FallbackManager", () => {
             // Setup Safe
             await safe.setup([user1.address], 1, AddressZero, "0x", AddressZero, AddressZero, 0, AddressZero);
 
-            // The transaction execution function doesn't bubble up revert messages so we check for a generic transaction fail code GS013
             await expect(
                 executeContractCallWithSigners(safe, safe, "setFallbackHandler", [await safe.getAddress()], [user1]),
-            ).to.be.revertedWith("GS013");
+            ).to.be.revertedWith("GS400");
         });
     });
 });

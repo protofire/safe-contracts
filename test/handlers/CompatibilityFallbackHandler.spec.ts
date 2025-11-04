@@ -1,7 +1,7 @@
 import { expect } from "chai";
-import hre, { deployments, ethers } from "hardhat";
+import hre, { ethers } from "hardhat";
 import { AddressZero } from "@ethersproject/constants";
-import { getCompatFallbackHandler, getSafeWithOwners } from "../utils/setup";
+import { getCompatFallbackHandler, getSafe } from "../utils/setup";
 import {
     buildSignatureBytes,
     executeContractCallWithSigners,
@@ -11,49 +11,125 @@ import {
     signHash,
 } from "../../src/utils/execution";
 import { chainId } from "../utils/encoding";
-import { killLibContract } from "../utils/contracts";
+import { badSimulatorContract, killLibContract } from "../utils/contracts";
 
 describe("CompatibilityFallbackHandler", () => {
-    const setupTests = deployments.createFixture(async ({ deployments }) => {
+    const setupTests = hre.deployments.createFixture(async ({ deployments }) => {
         await deployments.fixture();
         const signLib = await (await hre.ethers.getContractFactory("SignMessageLib")).deploy();
         const handler = await getCompatFallbackHandler();
         const handlerAddress = await handler.getAddress();
-        const signers = await ethers.getSigners();
+        const signers = await hre.ethers.getSigners();
         const [user1, user2] = signers;
-        const signerSafe = await getSafeWithOwners([user1.address], 1, handlerAddress);
+        const signerSafe = await getSafe({ owners: [user1.address], threshold: 1, fallbackHandler: handlerAddress });
         const signerSafeAddress = await signerSafe.getAddress();
-        const safe = await getSafeWithOwners([user1.address, user2.address, signerSafeAddress], 2, handlerAddress);
+        const safe = await getSafe({
+            owners: [user1.address, user2.address, signerSafeAddress],
+            threshold: 2,
+            fallbackHandler: handlerAddress,
+        });
         const safeAddress = await safe.getAddress();
         const validator = await getCompatFallbackHandler(safeAddress);
         const killLib = await killLibContract(user1);
+        const badSimulator = await badSimulatorContract(user1);
+        const erc721 = await ethers.deployContract("ERC721Token");
+        const erc1155 = await ethers.deployContract("ERC1155Token");
         return {
             safe,
             validator,
             handler,
             killLib,
+            badSimulator,
             signLib,
             signerSafe,
             signers,
+            erc721,
+            erc1155,
         };
     });
 
     describe("ERC1155", () => {
         it("to handle onERC1155Received", async () => {
-            const { handler } = await setupTests();
-            await expect(await handler.onERC1155Received.staticCall(AddressZero, AddressZero, 0, 0, "0x")).to.be.eq("0xf23a6e61");
+            const { handler, safe } = await setupTests();
+            const result = await handler
+                .connect(ethers.provider)
+                .onERC1155Received(AddressZero, AddressZero, 0, 0, "0x", { from: await safe.getAddress() });
+            await expect(result).to.be.eq("0xf23a6e61");
         });
 
         it("to handle onERC1155BatchReceived", async () => {
-            const { handler } = await setupTests();
-            await expect(await handler.onERC1155BatchReceived.staticCall(AddressZero, AddressZero, [], [], "0x")).to.be.eq("0xbc197c81");
+            const { handler, safe } = await setupTests();
+            const result = await handler
+                .connect(ethers.provider)
+                .onERC1155BatchReceived(AddressZero, AddressZero, [], [], "0x", { from: await safe.getAddress() });
+            await expect(result).to.be.eq("0xbc197c81");
+        });
+
+        it("should allow a Safe to receive ERC-1155 tokens", async () => {
+            const {
+                safe,
+                signers: [user],
+                erc1155,
+            } = await setupTests();
+            await erc1155.mintBatch(await user.getAddress(), [1, 2, 3], [100, 100, 100], "0x");
+
+            await expect(erc1155.connect(user).safeTransferFrom(await user.getAddress(), await safe.getAddress(), 1, 100, "0x")).to.not.be
+                .reverted;
+            await expect(
+                erc1155.connect(user).safeBatchTransferFrom(await user.getAddress(), await safe.getAddress(), [2, 3], [100, 100], "0x"),
+            ).to.not.be.reverted;
+        });
+
+        it("should revert when tokens are transferred directly to the handler", async () => {
+            const {
+                handler,
+                signers: [user],
+                erc1155,
+            } = await setupTests();
+            await erc1155.mintBatch(await user.getAddress(), [1, 2, 3], [100, 100, 100], "0x");
+
+            await expect(erc1155.connect(user).safeTransferFrom(await user.getAddress(), await handler.getAddress(), 1, 100, "0x")).to.be
+                .reverted;
+            await expect(
+                erc1155.connect(user).safeBatchTransferFrom(await user.getAddress(), await handler.getAddress(), [2, 3], [100, 100], "0x"),
+            ).to.be.revertedWith("not a fallback call");
         });
     });
 
     describe("ERC721", () => {
         it("to handle onERC721Received", async () => {
-            const { handler } = await setupTests();
-            await expect(await handler.onERC721Received.staticCall(AddressZero, AddressZero, 0, "0x")).to.be.eq("0x150b7a02");
+            const { handler, safe } = await setupTests();
+
+            const result = await handler
+                .connect(ethers.provider)
+                .onERC721Received(AddressZero, AddressZero, 0, "0x", { from: await safe.getAddress() });
+            await expect(result).to.be.eq("0x150b7a02");
+        });
+
+        it("should allow a Safe to receive ERC-721 tokens", async () => {
+            const {
+                safe,
+                signers: [user],
+                erc721,
+            } = await setupTests();
+            await erc721.mint(await user.getAddress(), 1);
+
+            await expect(
+                erc721.connect(user)["safeTransferFrom(address,address,uint256)"](await user.getAddress(), await safe.getAddress(), 1),
+            ).to.not.be.reverted;
+        });
+
+        it("should revert when tokens are transferred directly to the handler", async () => {
+            const {
+                handler,
+                signers: [user],
+                erc721,
+            } = await setupTests();
+            await erc721.mint(await user.getAddress(), 1);
+
+            await expect(
+                erc721.connect(user)["safeTransferFrom(address,address,uint256)"](await user.getAddress(), await handler.getAddress(), 1),
+            ).to.be.revertedWith("not a fallback call");
         });
     });
 
@@ -120,9 +196,37 @@ describe("CompatibilityFallbackHandler", () => {
 
             const signerSafeSig = buildContractSignature(signerSafeAddress, signerSafeOwnerSignature.data);
 
-            expect(
-                await validator.isValidSignature.staticCall(dataHash, buildSignatureBytes([typedDataSig, ethSignSig, signerSafeSig])),
-            ).to.be.eq("0x1626ba7e");
+            for (const signatures of [
+                [typedDataSig, ethSignSig],
+                [typedDataSig, signerSafeSig],
+                [ethSignSig, signerSafeSig],
+            ]) {
+                expect(await validator.isValidSignature.staticCall(dataHash, buildSignatureBytes(signatures))).to.be.eq("0x1626ba7e");
+            }
+        });
+
+        it("should not accept pre-approved signatures", async () => {
+            const {
+                validator,
+                signers: [user1, user2],
+            } = await setupTests();
+            const validatorAddress = await validator.getAddress();
+            const dataHash = ethers.keccak256("0xbaddad");
+            const user1Signature = {
+                signer: user1.address,
+                data: ethers.solidityPacked(["uint256", "uint256", "uint8"], [user1.address, 0, 1]),
+            };
+            const user2Signature = {
+                signer: user2.address,
+                data: await user2.signTypedData(
+                    { verifyingContract: validatorAddress, chainId: await chainId() },
+                    EIP712_SAFE_MESSAGE_TYPE,
+                    { message: dataHash },
+                ),
+            };
+
+            const signatures = buildSignatureBytes([user1Signature, user2Signature]);
+            await expect(validator.connect(user1).isValidSignature.staticCall(dataHash, signatures)).to.be.reverted;
         });
     });
 
@@ -168,9 +272,6 @@ describe("CompatibilityFallbackHandler", () => {
     });
 
     describe("simulate", () => {
-        // eslint-disable-next-line @typescript-eslint/no-empty-function
-        it.skip("can be called for any Safe", async () => {});
-
         it("should revert changes", async () => {
             const { validator, killLib } = await setupTests();
             const validatorAddress = await validator.getAddress();
@@ -214,6 +315,22 @@ describe("CompatibilityFallbackHandler", () => {
             const value = await validator.simulate.staticCall(killLibAddress, killLib.interface.encodeFunctionData("updateAndGet", []));
             expect(value).to.be.eq(1n);
             expect(await killLib.value()).to.be.eq(0n);
+        });
+
+        it("should revert for unsupported callers", async () => {
+            const { handler, badSimulator } = await setupTests();
+            const handlerAddress = await handler.getAddress();
+            for (let mode = 0; mode < 4; mode++) {
+                await expect(badSimulator.simulateFallbackHandler(handlerAddress, mode)).to.be.reverted;
+            }
+        });
+    });
+
+    describe("encodeTransactionData", () => {
+        it("should return the pre-image of a transaction hash", async () => {
+            const { safe, validator } = await setupTests();
+            const tx = [`0x${"11".repeat(20)}`, 1, "0x01020304", 0, 4, 5, 6, `0x${"77".repeat(20)}`, `0x${"88".repeat(20)}`, 9] as const;
+            expect(ethers.keccak256(await validator.encodeTransactionData(...tx))).to.be.eq(await safe.getTransactionHash(...tx));
         });
     });
 });

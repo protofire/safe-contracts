@@ -1,6 +1,6 @@
 import { expect } from "chai";
-import hre, { deployments, ethers } from "hardhat";
-import { compile, getCreateCall, getSafeWithOwners } from "../utils/setup";
+import hre, { ethers } from "hardhat";
+import { compile, getCreateCall, getSafe } from "../utils/setup";
 import { buildContractCall, executeTx, safeApproveHash } from "../../src/utils/execution";
 
 const CONTRACT_SOURCE = `
@@ -16,13 +16,13 @@ contract Test {
 }`;
 
 describe("CreateCall", () => {
-    const setupTests = deployments.createFixture(async ({ deployments }) => {
+    const setupTests = hre.deployments.createFixture(async ({ deployments }) => {
         await deployments.fixture();
         const testContract = await compile(CONTRACT_SOURCE);
-        const signers = await ethers.getSigners();
+        const signers = await hre.ethers.getSigners();
         const [user1] = signers;
         return {
-            safe: await getSafeWithOwners([user1.address]),
+            safe: await getSafe({ owners: [user1.address] }),
             createCall: await getCreateCall(),
             testContract,
             signers,
@@ -60,7 +60,7 @@ describe("CreateCall", () => {
             } = await setupTests();
 
             const tx = await buildContractCall(createCall, "performCreate", [1, testContract.data], await safe.nonce(), true);
-            await expect(executeTx(safe, tx, [await safeApproveHash(user1, safe, tx, true)])).to.revertedWith("GS013");
+            await expect(executeTx(safe, tx, [await safeApproveHash(user1, safe, tx, true)])).to.revertedWith("Could not deploy contract");
         });
 
         it("should successfully create contract and emit event", async () => {
@@ -156,7 +156,7 @@ describe("CreateCall", () => {
             } = await setupTests();
 
             const tx = await buildContractCall(createCall, "performCreate2", [1, testContract.data, salt], await safe.nonce(), true);
-            await expect(executeTx(safe, tx, [await safeApproveHash(user1, safe, tx, true)])).to.revertedWith("GS013");
+            await expect(executeTx(safe, tx, [await safeApproveHash(user1, safe, tx, true)])).to.revertedWith("Could not deploy contract");
         });
 
         it("should successfully create contract and emit event", async () => {

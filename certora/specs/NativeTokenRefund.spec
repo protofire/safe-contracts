@@ -1,13 +1,13 @@
 // This spec is a separate file because we summarize checkSignatures here
 
 methods {
-    function checkSignatures(bytes32, bytes memory) internal => NONDET;
+    function checkSignatures(address, bytes32, bytes memory) internal => NONDET;
 
     function getNativeTokenBalanceFor(address) external returns (uint256) envfree;
     function getSafeGuard() external returns (address) envfree;
 }
 
-ghost uint256 gasPriceEnv {
+persistent ghost uint256 gasPriceEnv {
     init_state axiom gasPriceEnv == 1;
 }
 
@@ -37,11 +37,11 @@ rule nativeTokenRefundIsSentToRefundReceiver(
     // gas refund parameters must be set
     require baseGas > 0 && gasPrice > 0;
 
-    // the refund receiver must not be zero, because in such a case tx.origin will be used and it'll come up with countexamples related to overflow
+    // the refund receiver must not be zero, because in such a case tx.origin will be used and it'll come up with counterexamples related to overflow
     // and adding pre-requirements is tricky
     // also, it shouldn't be the safe itself 
     require refundReceiver != 0 && refundReceiver != currentContract;
-    // // We're being optimistic about the delegatecall and in the munged contracts the actuall call was removed
+    // // We're being optimistic about the delegatecall and in the munged contracts the actual call was removed
     // // So it's possible the gas used to be 0 in the munged contracts, so no refund would be sent (a counterexample)
     // require operation == Enum.Operation.Call;
 
